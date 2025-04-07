@@ -1,1 +1,51 @@
-# 
+name: Warm GCP APIs Manually
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration_minutes:
+        description: 'How long to warm the APIs (in minutes)'
+        required: true
+        default: '30'
+
+env:
+  TARGET_URL: "https://whisper-translate-gpu-901342520595.us-central1.run.app/check-gpu/"
+  AUDIENCE: "https://whisper-translate-gpu-901342520595.us-central1.run.app"
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          token_format: "id_token"
+          audience: ${{ env.AUDIENCE }}
+          
+      - name: Warm APIs
+        run: |
+          duration_minutes=${{ github.event.inputs.duration_minutes }}
+          end_time=$(( $(date +%s) + duration_minutes * 60 ))
+
+          echo "⏳ Starting warmup for $duration_minutes minutes..."
+
+          while [ $(date +%s) -lt $end_time ]; do
+            echo "📡 Sending ping to API..."
+            curl -s -o /dev/null -w "%{http_code}" \
+              -X POST "$TARGET_URL" \
+              -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
+              -H "Content-Type: application/json" \
+              -d '{"ping": true}'
+
+            echo "✅ Ping sent. Sleeping 30 seconds..."
+            sleep 30
+          done
+
+          echo "✅ Done warming APIs!"
+
