@@ -132,7 +132,7 @@ jobs:
             [ "${{ github.event.inputs.warm_llm_api }}" == "true" ] && \
               echo "→ LLM API" && \
               curl -s -o /dev/null -w "LLM -> %{http_code}\n" \
-                -X POST "$LLM_API/api/tags/" \
+                -X POST "$LLM_API/api/tags" \
                 -H "Authorization: Bearer ${{ steps.auth_llm.outputs.id_token }}" \
                 -H "Content-Type: application/json" \
                 -d '{"ping": "llm"}'
