@@ -7,9 +7,43 @@ on:
         description: 'How long to warm the APIs (in minutes)'
         required: true
         default: '30'
+      sleep_seconds:
+        description: 'How many seconds to wait between each API call'
+        required: false
+        default: '30'
+      warm_ser_api:
+        description: 'Warm SER API'
+        required: false
+        type: boolean
+        default: false
+      warm_stt_api:
+        description: 'Warm STT API'
+        required: false
+        type: boolean
+        default: false
+      warm_llm_api:
+        description: 'Warm LLM API'
+        required: false
+        type: boolean
+        default: false
+      warm_stt_ser_orchestrator_api:
+        description: 'Warm STT SER Orchestrator API'
+        required: false
+        type: boolean
+        default: false
+      warm_coqui_api:
+        description: 'Warm Coqui API'
+        required: false
+        type: boolean
+        default: false
 
 env:
-  TARGET_URL: "https://whisper-translate-gpu-901342520595.us-central1.run.app/check-gpu/"
+  STT_API: "https://whisper-translate-gpu-901342520595.us-central1.run.app/check-gpu/"
+  SER_API: "https://ser-gpu-901342520595.us-central1.run.app/check-gpu/"
+  LLM_API: "https://deepseek-7b-gpu-901342520595.us-central1.run.app/api/tags/"
+  TTS_API: "https://coqui-tts-gpu-901342520595.us-central1.run.app/check-gpu/"
+  ORCHESTRATOR_API: "https://ser-stt-gpu-901342520595.us-central1.run.app/warm/"
+
   AUDIENCE: "https://whisper-translate-gpu-901342520595.us-central1.run.app"
 
 jobs:
@@ -22,7 +56,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-        
+
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'
@@ -30,25 +64,61 @@ jobs:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
           token_format: "id_token"
           id_token_audience: ${{ env.AUDIENCE }}
-          
-      - name: Warm APIs
+
+      - name: Warm Selected APIs
         run: |
           duration_minutes=${{ github.event.inputs.duration_minutes }}
+          sleep_seconds=${{ github.event.inputs.sleep_seconds }}
           end_time=$(( $(date +%s) + duration_minutes * 60 ))
 
           echo "⏳ Starting warmup for $duration_minutes minutes..."
 
           while [ $(date +%s) -lt $end_time ]; do
-            echo "📡 Sending ping to API..."
-            curl -s -o /dev/null -w "%{http_code}" \
-              -X POST "$TARGET_URL" \
-              -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
-              -H "Content-Type: application/json" \
-              -d '{"ping": true}'
+            echo "📡 Sending warmup requests..."
 
-            echo "✅ Ping sent. Sleeping 30 seconds..."
-            sleep 30
+            [ "${{ github.event.inputs.warm_ser_api }}" == "true" ] && \
+              echo "→ SER API" && \
+              curl -s -o /dev/null -w "SER -> %{http_code}\n" \
+                -X POST "$SER_API" \
+                -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
+                -H "Content-Type: application/json" \
+                -d '{"ping": "ser"}'
+
+            [ "${{ github.event.inputs.warm_stt_api }}" == "true" ] && \
+              echo "→ STT API" && \
+              curl -s -o /dev/null -w "STT -> %{http_code}\n" \
+                -X POST "$STT_API" \
+                -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
+                -H "Content-Type: application/json" \
+                -d '{"ping": "stt"}'
+
+            [ "${{ github.event.inputs.warm_llm_api }}" == "true" ] && \
+              echo "→ LLM API" && \
+              curl -s -o /dev/null -w "LLM -> %{http_code}\n" \
+                -X POST "$LLM_API" \
+                -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
+                -H "Content-Type: application/json" \
+                -d '{"ping": "llm"}'
+
+            [ "${{ github.event.inputs.warm_stt_ser_orchestrator_api }}" == "true" ] && \
+              echo "→ Orchestrator API" && \
+              curl -s -o /dev/null -w "Orchestrator -> %{http_code}\n" \
+                -X POST "$ORCHESTRATOR_API" \
+                -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
+                -H "Content-Type: application/json" \
+                -d '{"ping": "orchestrator"}'
+
+            [ "${{ github.event.inputs.warm_coqui_api }}" == "true" ] && \
+              echo "→ Coqui TTS API" && \
+              curl -s -o /dev/null -w "TTS -> %{http_code}\n" \
+                -X POST "$TTS_API" \
+                -H "Authorization: Bearer ${{ steps.auth.outputs.id_token }}" \
+                -H "Content-Type: application/json" \
+                -d '{"ping": "tts"}'
+
+            echo "⏲️ Sleeping for 30 seconds..."
+            sleep $sleep_seconds
           done
 
-          echo "✅ Done warming APIs!"
+          echo "✅ Warmup completed."
 
