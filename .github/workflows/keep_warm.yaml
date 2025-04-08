@@ -37,12 +37,19 @@ on:
         type: boolean
         default: false
 
+# env:
+#   STT_API: "https://whisper-translate-gpu-901342520595.us-central1.run.app"
+#   SER_API: "https://ser-gpu-901342520595.us-central1.run.app"
+#   LLM_API: "https://deepseek-7b-gpu-901342520595.us-central1.run.app"
+#   TTS_API: "https://coqui-tts-gpu-901342520595.us-central1.run.app"
+#   ORCHESTRATOR_API: "https://ser-stt-gpu-901342520595.us-central1.run.app"
+
 env:
-  STT_API: "https://whisper-translate-gpu-901342520595.us-central1.run.app"
-  SER_API: "https://ser-gpu-901342520595.us-central1.run.app"
-  LLM_API: "https://deepseek-7b-gpu-901342520595.us-central1.run.app"
-  TTS_API: "https://coqui-tts-gpu-901342520595.us-central1.run.app"
-  ORCHESTRATOR_API: "https://ser-stt-gpu-901342520595.us-central1.run.app"
+  STT_API: ${{ secrets.STT_API_URL }}
+  SER_API: ${{ secrets.SER_API_URL }}
+  LLM_API: ${{ secrets.LLM_API_URL }}
+  TTS_API: ${{ secrets.TTS_API_URL }}
+  ORCHESTRATOR_API: ${{ secrets.ORCHESTRATOR_API_URL }}
 
 jobs:
   warmup:

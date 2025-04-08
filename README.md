@@ -1,9 +1,9 @@
 # Keeping-Cloud-APIs-Warm
 
 ## Overview
-This repo shows a hacky way of handling the cold start issue with Google Cloud services. 
+This repo shows a hacky way of handling the cold start issue with Google Cloud services, using a simple GitHub Action automation script. 
 
-The issue I had, was that I wanted my APIs to have fast initial response times when I know I want to use them; however, I didn't want their servers to be running 24/7, such that they are always racking up costs. 
+The issue I had, was that I wanted my APIs to have fast initial response times when I know I want to use them; however, I didn't want their servers to be running 24/7, such that they are always racking up costs. This is especially important for services which have GPU backends, as they are very expensive.
 
 So my solution was to make a script which pings the servers for a specified period of time, at a specified interval. 
 
