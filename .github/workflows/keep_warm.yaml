@@ -127,8 +127,7 @@ jobs:
               curl -s -o /dev/null -w "LLM -> %{http_code}\n" \
                 -X POST "$LLM_API/api/" \
                 -H "Authorization: Bearer ${{ steps.auth_llm.outputs.id_token }}" \
-                -H "Content-Type: application/json" \
-                -d '{"ping": "llm"}'
+                -H "Content-Type: application/json"
 
             [ "${{ github.event.inputs.warm_coqui_api }}" == "true" ] && \
               echo "→ Coqui TTS API" && \
