@@ -9,7 +9,7 @@ on:
         default: '30'
       sleep_seconds:
         description: 'How many seconds to wait between each API call'
-        required: false
+        required: true
         default: '30'
       warm_ser_api:
         description: 'Warm SER API'
@@ -54,14 +54,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
-
-      # - name: Google Auth
-      #   id: auth
-      #   uses: 'google-github-actions/auth@v2'
-      #   with:
-      #     credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-      #     token_format: "id_token"
-      #     id_token_audience: ${{ env.AUDIENCE }}
 
       - name: Auth for STT
         id: auth_stt
@@ -109,10 +101,10 @@ jobs:
           sleep_seconds=${{ github.event.inputs.sleep_seconds }}
           end_time=$(( $(date +%s) + duration_minutes * 60 ))
 
-          echo "⏳ Starting warmup for $duration_minutes minutes..."
+          echo "Starting warmup for $duration_minutes minutes..."
 
           while [ $(date +%s) -lt $end_time ]; do
-            echo "📡 Sending warmup requests..."
+            echo "Sending warmup requests..."
 
             [ "${{ github.event.inputs.warm_stt_api }}" == "true" ] && \
               echo "→ STT API" && \
