@@ -6,11 +6,11 @@ on:
       duration_minutes:
         description: 'How long to warm the APIs (in minutes)'
         required: true
-        default: '30'
+        default: '5'
       sleep_seconds:
         description: 'How many seconds to wait between each API call'
         required: true
-        default: '30'
+        default: '5'
       warm_ser_api:
         description: 'Warm SER API'
         required: false
@@ -36,13 +36,6 @@ on:
         required: false
         type: boolean
         default: false
-
-# env:
-#   STT_API: "https://whisper-translate-gpu-901342520595.us-central1.run.app"
-#   SER_API: "https://ser-gpu-901342520595.us-central1.run.app"
-#   LLM_API: "https://deepseek-7b-gpu-901342520595.us-central1.run.app"
-#   TTS_API: "https://coqui-tts-gpu-901342520595.us-central1.run.app"
-#   ORCHESTRATOR_API: "https://ser-stt-gpu-901342520595.us-central1.run.app"
 
 env:
   STT_API: ${{ secrets.STT_API_URL }}
