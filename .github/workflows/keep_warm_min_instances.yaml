@@ -7,7 +7,7 @@ on:
       duration:
         description: "Minutes to keep the higher min-instances (e.g. 2, 30, 300)"
         required: true
-        default: "30m"
+        default: "5"
       temp_min:
         description: "Temporary min-instances value"
         required: true
