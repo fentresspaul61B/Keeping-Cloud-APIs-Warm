@@ -1,0 +1,88 @@
+# .github/workflows/temporary-scale.yml
+name: Temporarily scale Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: "Minutes to keep the higher min-instances (e.g. 2, 30, 300)"
+        required: true
+        default: "30m"
+      temp_min:
+        description: "Temporary min-instances value"
+        required: true
+        default: "1"
+      service:
+        description: "Cloud Run service name"
+        required: true
+        default: "my-api"
+      project_id:
+        description: "GCP project ID"
+        required: true
+        default: "my-project"
+      region:
+        description: "Cloud Run region"
+        required: true
+        default: "us-central1"
+
+jobs:
+  burst_pin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1440       # hard stop after 24 h in case something hangs
+    env:
+      SERVICE:     ${{ inputs.service }}
+      REGION:      ${{ inputs.region }}
+      PROJECT_ID:  ${{ inputs.project_id }}
+      TEMP_MIN:    ${{ inputs.temp_min }}
+      DURATION:    ${{ inputs.duration }}
+
+    steps:
+    # Authenticate to Google Cloud
+    - name: "Authenticate to GCP"
+      uses: "google-github-actions/auth@v2"
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+    - name: "Install gcloud components"
+      uses: "google-github-actions/setup-gcloud@v2"
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+
+    # Capture current min-instances so we can revert exactly
+    - name: "Fetch current min-instances"
+      id: getmin
+      run: |
+        CURRENT=$(gcloud run services describe "$SERVICE" \
+                  --project "$PROJECT_ID" \
+                  --region "$REGION" \
+                  --format="value(spec.template.metadata.annotations.serving\\.knative\\.dev/minScale)" \
+                  || echo "0")
+        echo "current=$CURRENT" >> $GITHUB_OUTPUT
+
+    # Scale up temporarily
+    - name: "Set min-instances = ${{ env.TEMP_MIN }}"
+      run: |
+        gcloud run services update "$SERVICE" \
+          --project "$PROJECT_ID" \
+          --region  "$REGION" \
+          --min-instances "$TEMP_MIN" \
+          --quiet
+
+    # Wait (Minutes)
+    - name: "Sleep for duration"
+      run: |
+        # DURATION is something like "30" (minutes)
+        SECS=$(( ${{ env.DURATION }} * 60 ))
+        echo "Sleeping $SECS seconds …"
+        sleep "$SECS"
+
+
+    # Revert min instances to 0
+    - name: "Restore min-instances = ${{ steps.getmin.outputs.current }}"
+      if: always()         # run even if previous step failed/cancelled
+      run: |
+        gcloud run services update "$SERVICE" \
+          --project "$PROJECT_ID" \
+          --region  "$REGION" \
+          --min-instances "0" \
+          --quiet
