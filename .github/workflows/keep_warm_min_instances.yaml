@@ -30,15 +30,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 1440       # hard stop after 24 h in case something hangs
     env:
-      SERVICE:     ${{ inputs.service }}
-      REGION:      ${{ inputs.region }}
-      PROJECT_ID:  ${{ inputs.project_id }}
-      TEMP_MIN:    ${{ inputs.temp_min }}
-      DURATION:    ${{ inputs.duration }}
+      SERVICE:      ${{ inputs.service }}
+      REGION:       ${{ inputs.region }}
+      PROJECT_ID:   ${{ inputs.project_id }}
+      TEMP_MIN:     ${{ inputs.temp_min }}
+      DURATION:     ${{ inputs.duration }}
 
     steps:
     - name: "Authenticate to GCP"
-      uses: "google-github-actions/auth@v2"
+      id: auth_llm
+      uses: google-github-actions/auth@v2
       with:
         credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
