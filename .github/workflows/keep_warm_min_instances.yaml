@@ -76,12 +76,10 @@ jobs:
           --quiet
 
 
-    - name: "Validate min-instances = 0"
-      if: always()
+    - name: "Dump Cloud Run service JSON"
       run: |
-        FINAL=$(gcloud run services describe "$SERVICE" \
-                --project "$PROJECT_ID" \
-                --region  "$REGION" \
-                --format="value(spec.template.metadata.annotations.serving\\.knative\\.dev/minScale)" \
-                || echo "0")
-        echo "Final min-instances for $SERVICE = ${FINAL:-0}"
+        echo "Fetching raw service description …"
+        gcloud run services describe "$SERVICE" \
+          --project "$PROJECT_ID" \
+          --region  "$REGION" \
+          --format=json
