@@ -54,6 +54,7 @@ jobs:
           --project "$PROJECT_ID" \
           --region  "$REGION" \
           --min-instances "$TEMP_MIN" \
+          --no-cpu-throttling \
           --quiet
 
     # Wait (Minutes)
@@ -73,6 +74,7 @@ jobs:
           --project "$PROJECT_ID" \
           --region  "$REGION" \
           --min-instances "0" \
+          --cpu-throttling \ 
           --quiet
 
 
