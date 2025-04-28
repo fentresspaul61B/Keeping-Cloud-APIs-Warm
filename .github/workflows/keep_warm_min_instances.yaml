@@ -37,7 +37,6 @@ jobs:
       DURATION:    ${{ inputs.duration }}
 
     steps:
-    # Authenticate to Google Cloud
     - name: "Authenticate to GCP"
       uses: "google-github-actions/auth@v2"
       with:
@@ -48,18 +47,6 @@ jobs:
       with:
         project_id: ${{ env.PROJECT_ID }}
 
-    # Capture current min-instances so we can revert exactly
-    - name: "Fetch current min-instances"
-      id: getmin
-      run: |
-        CURRENT=$(gcloud run services describe "$SERVICE" \
-                  --project "$PROJECT_ID" \
-                  --region "$REGION" \
-                  --format="value(spec.template.metadata.annotations.serving\\.knative\\.dev/minScale)" \
-                  || echo "0")
-        echo "current=$CURRENT" >> $GITHUB_OUTPUT
-
-    # Scale up temporarily
     - name: "Set min-instances = ${{ env.TEMP_MIN }}"
       run: |
         gcloud run services update "$SERVICE" \
@@ -86,3 +73,14 @@ jobs:
           --region  "$REGION" \
           --min-instances "0" \
           --quiet
+
+
+    - name: "Validate min-instances = 0"
+      if: always()
+      run: |
+        FINAL=$(gcloud run services describe "$SERVICE" \
+                --project "$PROJECT_ID" \
+                --region  "$REGION" \
+                --format="value(spec.template.metadata.annotations.serving\\.knative\\.dev/minScale)" \
+                || echo "0")
+        echo "Final min-instances for $SERVICE = ${FINAL:-0}"
